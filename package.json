@@ -1,0 +1,16 @@
+{
+  "name": "openai-agents",
+  "scripts": {
+    "streamed": "tsx streamed.ts",
+    "human-in-the-loop-stream": "tsx human-in-the-loop-stream.ts"
+  },
+  "dependencies": {
+    "@openai/agents": "^0.0.2",
+    "chalk": "^5.4.1",
+    "dotenv": "^16.5.0",
+    "zod": "^3.25.51"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.4"
+  }
+}
