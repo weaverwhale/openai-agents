@@ -48,7 +48,8 @@ function displayHelp() {
   console.log(chalk.gray('• "help" - Show this help message'));
   console.log();
   console.log(chalk.white('Available tools (I can use these automatically):'));
-  console.log(chalk.gray('• Weather: "What\'s the weather in Tokyo?"'));
+  console.log(chalk.gray('• Weather: "What\'s the weather at coordinates 35.6762, 139.6503?"'));
+  console.log(chalk.gray('• Search: "Search for information about TypeScript"'));
   console.log(chalk.gray('• Calculator: "Calculate 25 * 8 + 10"'));
   console.log(chalk.gray('• File ops: "List files in this directory"'));
   console.log(chalk.gray('• Time: "What time is it in New York?"'));
@@ -117,7 +118,8 @@ const mainAgent = new Agent({
   instructions: `You are a helpful and intelligent AI assistant with access to various tools. 
   
   Your capabilities include:
-  - Weather information for any city
+  - Real-time weather information using latitude and longitude coordinates
+  - Web search and general search queries
   - Mathematical calculations and computations
   - File and directory operations (reading, writing, listing)
   - System information retrieval
@@ -131,6 +133,7 @@ const mainAgent = new Agent({
   - If a tool requires approval, explain why it's needed
   - Format your responses clearly and concisely
   - If you can't help with something, explain why and suggest alternatives
+  - For weather requests, you'll need latitude and longitude coordinates
   
   Always maintain a professional yet friendly tone in your responses.`,
   tools: allTools,

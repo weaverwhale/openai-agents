@@ -1,41 +1,16 @@
 # 🤖 Mega Agent - Intelligent CLI Assistant
 
-A powerful conversational AI assistant that combines streaming responses, human-in-the-loop approvals, and a comprehensive set of tools for various tasks.
+A powerful conversational AI assistant that combines streaming responses, human-in-the-loop approvals, and a comprehensive set of tools for various tasks including real-time weather data, web search, calculations, file operations, and system information.
 
 ## Features
 
 - **Streaming Responses**: Real-time streaming of AI responses for better user experience
 - **Human-in-the-Loop**: Approval system for sensitive operations
-- **Modular Tools**: Easily extensible tool system
+- **Real-time Web Search**: AI-powered web search using OpenAI's web_search_preview tool
+- **Live Weather Data**: Current weather information using Visual Crossing API
+- **Modular Tools**: Easily extensible tool system with 6 built-in tools
 - **Beautiful CLI**: Colorful and intuitive command-line interface using Chalk
 - **Conversational**: Natural back-and-forth conversations with context
-
-## Available Tools
-
-### 🌤️ Weather Tool
-- Get weather information for any city
-- Example: "What's the weather in Tokyo?"
-
-### 🧮 Calculator Tool
-- Perform mathematical calculations
-- Example: "Calculate 25 * 8 + 10"
-
-### 📁 File Operations Tool
-- Read, write, and list files/directories
-- **Requires approval** for write operations and sensitive paths
-- Example: "List files in this directory"
-
-### ⏰ Time & Date Tool
-- Get current time, date, or timezone information
-- Example: "What time is it in New York?"
-
-### 🎲 Random Generator Tool
-- Generate random numbers, strings, choices, or UUIDs
-- Example: "Generate a random number between 1 and 100"
-
-### 💻 System Information Tool
-- Get OS, memory, CPU, and uptime information
-- Example: "Show system information"
 
 ## Installation
 
@@ -46,8 +21,10 @@ npm install
 
 2. Set up your environment variables:
 ```bash
-cp .env.example .env
-# Add your OpenAI API key to .env
+# Create a .env file with the following variables:
+OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_MODEL=gpt-4o-mini  # Optional, defaults to gpt-4o-mini
+VISUAL_CROSSING_API_KEY=your_visual_crossing_api_key_here
 ```
 
 ## Usage
@@ -65,19 +42,42 @@ npm run mega-agent
 - `exit` or `quit` - Exit the application
 - `Ctrl+C` - Graceful shutdown
 
+## Available Tools
+
+The Mega Agent comes with 6 powerful built-in tools:
+
+1. **🌤️ Weather Tool**: Get real-time weather data using coordinates
+2. **🔍 Search Tool**: AI-powered web search with current information
+3. **🧮 Calculator Tool**: Perform mathematical calculations
+4. **📁 File Operations Tool**: Read, write, and list files/directories
+5. **⏰ Time Tool**: Get current time, date, and timezone information
+6. **💻 System Info Tool**: Retrieve system information (OS, memory, CPU, etc.)
+
 ### Example Conversations
 
 ```
-You: What's the weather in San Francisco?
-🤖 I'll check the weather in San Francisco for you.
-The weather in San Francisco is sunny with a temperature of 20°C.
+You: What's the weather at coordinates 37.7749, -122.4194?
+🤖 I'll check the weather at those coordinates for you.
+
+Weather for San Francisco, CA, United States:
+🌡️ Temperature: 18°C (feels like 16°C)
+🌤️ Condition: Partly Cloudy
+💧 Humidity: 65%
+💨 Wind Speed: 12 km/h
+☁️ Icon: partly-cloudy-day
+
+You: Search for the latest news about artificial intelligence
+🤖 I'll search for the latest AI news for you.
+
+🔍 Search Results for: "latest news about artificial intelligence"
+
+📝 **Answer:**
+Here are the latest developments in AI: [Current AI news and developments]
 
 You: Calculate the square root of 144
 🤖 I'll calculate that for you.
-sqrt(144) = 12
 
-You: What time is it?
-🤖 Current date and time: 12/20/2024, 3:45:30 PM
+sqrt(144) = 12
 ```
 
 ## Adding New Tools
@@ -110,9 +110,9 @@ export const allTools = [
 
 ## Human-in-the-Loop Approvals
 
-Some tools require approval before execution:
+Some tools require approval before execution for security and safety:
 - **File Operations**: Write operations and sensitive file paths
-- **Weather Tool**: Sensitive locations (Area 51, Pentagon, etc.)
+- **Search Tool**: Searches containing sensitive terms
 - **Custom Logic**: Any tool can implement custom approval logic
 
 When approval is required, you'll see:
@@ -130,7 +130,9 @@ Do you approve this tool usage? (y/n):
 
 ```
 ├── mega-agent.ts          # Main conversational agent
-├── tools.ts              # All tool definitions
+├── tools.ts              # All tool definitions (6 tools)
+├── openai.ts             # OpenAI client configuration
+├── prompt.ts             # Prompt templates for tools
 ├── streamed.ts           # Original streaming example
 ├── human-in-the-loop-stream.ts  # Original HITL example
 ├── package.json          # Dependencies and scripts
@@ -139,20 +141,21 @@ Do you approve this tool usage? (y/n):
 
 ## Development
 
-### Running Other Examples
-```bash
-# Original streaming example
-npm run streamed
-
-# Original human-in-the-loop example
-npm run human-in-the-loop-stream
-```
-
 ### Environment Variables
 Create a `.env` file with:
 ```
-OPENAI_API_KEY=your_api_key_here
+OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_MODEL=gpt-4o-mini  # Optional, defaults to gpt-4o-mini
+VISUAL_CROSSING_API_KEY=your_visual_crossing_api_key_here
 ```
+
+### API Keys Required
+
+1. **OpenAI API Key**: Get from [OpenAI Platform](https://platform.openai.com/api-keys)
+   - Used for: AI conversations and web search functionality
+   
+2. **Visual Crossing Weather API Key**: Get from [Visual Crossing](https://www.visualcrossing.com/weather-api)
+   - Used for: Real-time weather data
 
 ## License
 

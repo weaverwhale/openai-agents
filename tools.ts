@@ -2,29 +2,193 @@ import { z } from 'zod';
 import { tool } from '@openai/agents';
 import fs from 'fs/promises';
 import path from 'path';
+import { client, model } from './openai';
+import { generateWebSearchPrompt } from './prompt';
+
+// Search interfaces
+interface SearchSource {
+  title: string;
+  snippet: string;
+  url: string;
+}
+
+interface SearchResponse {
+  answer: string;
+  sources: SearchSource[];
+}
+
+// Search function using OpenAI's web search
+export const search = async (query?: string): Promise<SearchResponse | { error: string }> => {
+  if (!query) {
+    return { error: 'Query is required' };
+  }
+
+  try {
+    // Generate OpenAI Prompt
+    const prompt = generateWebSearchPrompt(query);
+
+    // Call OpenAI's Responses API
+    // Uses the built-in web_search_preview tool to get real-time data
+    const response = await client.responses.create({
+      model,
+      tools: [{ type: 'web_search_preview' }],
+      tool_choice: 'required',
+      input: prompt,
+    });
+
+    // Extract answer from response
+    const answer = response.output_text || 'No answer available';
+
+    // Return empty sources array for now
+    const sources: SearchSource[] = [];
+
+    return {
+      answer,
+      sources,
+    };
+  } catch (error) {
+    console.error('Search API Error:', error);
+    return { error: 'An error occurred while processing the search request' };
+  }
+};
+
+// Weather data interface
+export interface WeatherData {
+  location: string;
+  temperature: number;
+  description: string;
+  icon: string;
+  humidity: number;
+  windSpeed: number;
+  feelsLike: number;
+}
+
+// Weather API function using Visual Crossing
+export const getWeather = async (lat: number, lon: number): Promise<WeatherData> => {
+  const API_KEY = process.env.VISUAL_CROSSING_API_KEY;
+
+  if (!API_KEY) {
+    throw new Error('Visual Crossing API key not found');
+  }
+
+  try {
+    // Visual Crossing API uses lat,lon format
+    const location = `${lat},${lon}`;
+    const response = await fetch(
+      `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${location}?unitGroup=metric&include=current&key=${API_KEY}&contentType=json`
+    );
+
+    if (!response.ok) {
+      throw new Error(`Weather API Error: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Visual Crossing API response structure
+    const currentConditions = data.currentConditions;
+
+    return {
+      location: data.resolvedAddress,
+      temperature: Math.round(currentConditions.temp),
+      description: currentConditions.conditions,
+      icon: currentConditions.icon,
+      humidity: currentConditions.humidity,
+      windSpeed: currentConditions.windspeed,
+      feelsLike: Math.round(currentConditions.feelslike),
+    };
+  } catch (error) {
+    console.error('Weather API Error:', error);
+    throw error;
+  }
+};
 
 // Weather Tool
 export const getWeatherTool = tool({
   name: 'get_weather',
-  description: 'Get the weather for a given city',
+  description: 'Get current weather information for a location using latitude and longitude coordinates',
   parameters: z.object({
-    city: z.string().describe('The city to get weather for'),
+    lat: z.number().describe('Latitude coordinate (-90 to 90)'),
+    lon: z.number().describe('Longitude coordinate (-180 to 180)'),
   }),
-  needsApproval: async (_ctx, { city }) => {
-    // Require approval for certain sensitive locations
-    const sensitiveLocations = ['Area 51', 'Pentagon', 'White House'];
-    return sensitiveLocations.some(loc => 
-      city.toLowerCase().includes(loc.toLowerCase())
+  needsApproval: async (_ctx, { lat, lon }) => {
+    // Require approval for potentially sensitive coordinates
+    // You can customize this logic based on your needs
+    return false; // No approval needed for weather data
+  },
+  execute: async ({ lat, lon }) => {
+    try {
+      // Validate coordinates
+      if (isNaN(lat) || isNaN(lon)) {
+        throw new Error('Invalid latitude or longitude coordinates');
+      }
+      
+      if (lat < -90 || lat > 90) {
+        throw new Error('Latitude must be between -90 and 90 degrees');
+      }
+      
+      if (lon < -180 || lon > 180) {
+        throw new Error('Longitude must be between -180 and 180 degrees');
+      }
+
+      const weather = await getWeather(lat, lon);
+      
+      return `
+        Weather for ${weather.location}:
+        🌡️ Temperature: ${weather.temperature}°C (feels like ${weather.feelsLike}°C)
+        🌤️ Condition: ${weather.description}
+        💧 Humidity: ${weather.humidity}%
+        💨 Wind Speed: ${weather.windSpeed} km/h
+        ☁️ Icon: ${weather.icon}
+      `;
+    } catch (error) {
+      return `Error fetching weather data: ${error instanceof Error ? error.message : 'Unknown error occurred'}`;
+    }
+  },
+});
+
+// Search Tool
+export const searchTool = tool({
+  name: 'search',
+  description: 'Search the web or perform general search queries',
+  parameters: z.object({
+    query: z.string().describe('The search query to execute'),
+  }),
+  needsApproval: async (_ctx, { query }) => {
+    // You can add approval logic for sensitive searches if needed
+    const sensitiveTerms = ['personal information', 'private data', 'passwords'];
+    return sensitiveTerms.some(term => 
+      query.toLowerCase().includes(term.toLowerCase())
     );
   },
-  execute: async ({ city }) => {
-    // Simulate weather API call
-    const weatherConditions = ['sunny', 'cloudy', 'rainy', 'snowy', 'windy'];
-    const temperatures = ['-5°C', '10°C', '20°C', '25°C', '30°C'];
-    const condition = weatherConditions[Math.floor(Math.random() * weatherConditions.length)];
-    const temp = temperatures[Math.floor(Math.random() * temperatures.length)];
-    
-    return `The weather in ${city} is ${condition} with a temperature of ${temp}.`;
+  execute: async ({ query }) => {
+    try {
+      if (!query || query.trim() === '') {
+        throw new Error('Search query cannot be empty');
+      }
+
+      const searchResults = await search(query.trim());
+      
+      // Check if there was an error
+      if ('error' in searchResults) {
+        throw new Error(searchResults.error);
+      }
+      
+      let response = `🔍 Search Results for: "${query}"\n\n`;
+      response += `📝 **Answer:**\n${searchResults.answer}\n\n`;
+      
+      if (searchResults.sources && searchResults.sources.length > 0) {
+        response += `📊 **Sources:** (${searchResults.sources.length} found)\n`;
+        searchResults.sources.forEach((source, index) => {
+          response += `${index + 1}. **${source.title}**\n`;
+          response += `   🔗 ${source.url}\n`;
+          response += `   📝 ${source.snippet}\n\n`;
+        });
+      }
+      
+      return response;
+    } catch (error) {
+      return `Error performing search: ${error instanceof Error ? error.message : 'Unknown error occurred'}`;
+    }
   },
 });
 
@@ -162,6 +326,7 @@ export const systemInfoTool = tool({
 // Export all tools as an array for easy importing
 export const allTools = [
   getWeatherTool,
+  searchTool,
   calculatorTool,
   fileOperationsTool,
   timeTool,
