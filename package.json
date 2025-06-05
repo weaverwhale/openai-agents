@@ -2,7 +2,9 @@
   "name": "openai-agents",
   "scripts": {
     "streamed": "tsx streamed.ts",
-    "human-in-the-loop-stream": "tsx human-in-the-loop-stream.ts"
+    "human-in-the-loop-stream": "tsx human-in-the-loop-stream.ts",
+    "mega-agent": "tsx mega-agent.ts",
+    "start": "tsx mega-agent.ts"
   },
   "dependencies": {
     "@openai/agents": "^0.0.2",
