@@ -13,6 +13,65 @@ const rl = readline.createInterface({
   output: process.stdout,
 });
 
+// Loading animation
+class LoadingAnimation {
+  private interval: NodeJS.Timeout | null = null;
+  private frame = 0;
+  private frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+  private message = '';
+
+  start(message: string = 'Thinking') {
+    this.message = message;
+    this.frame = 0;
+    
+    process.stdout.write('\n');
+    this.interval = setInterval(() => {
+      process.stdout.write(`\r${chalk.cyan(this.frames[this.frame])} ${chalk.gray(this.message)}...`);
+      this.frame = (this.frame + 1) % this.frames.length;
+    }, 100);
+  }
+
+  updateMessage(message: string) {
+    this.message = message;
+  }
+
+  stop() {
+    if (this.interval) {
+      clearInterval(this.interval);
+      this.interval = null;
+      process.stdout.write('\r' + ' '.repeat(50) + '\r'); // Clear the line
+    }
+  }
+}
+
+// Tool usage indicator
+function showToolUsage(toolName: string, args?: any) {
+  const toolEmojis: { [key: string]: string } = {
+    'get_weather': '🌤️',
+    'search': '🔍',
+    'calculator': '🧮',
+    'file_operations': '📁',
+    'get_time': '⏰',
+    'system_info': '💻'
+  };
+  
+  const emoji = toolEmojis[toolName] || '🔧';
+  const toolDisplayName = toolName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  
+  console.log(chalk.bgMagenta.white.bold(`  ${emoji} USING TOOL: ${toolDisplayName}  `));
+  if (args && Object.keys(args).length > 0) {
+    console.log(chalk.magenta('━'.repeat(40)));
+    Object.entries(args).forEach(([key, value]) => {
+      const displayValue = typeof value === 'string' && value.length > 50 
+        ? value.substring(0, 50) + '...' 
+        : value;
+      console.log(chalk.gray(`${key}: ${displayValue}`));
+    });
+    console.log(chalk.magenta('━'.repeat(40)));
+  }
+  console.log();
+}
+
 // Prompt user for yes/no confirmation
 async function confirm(question: string): Promise<boolean> {
   const answer = await rl.question(chalk.yellow(`${question} (y/n): `));
@@ -62,6 +121,70 @@ function displayHelp() {
   console.log();
 }
 
+// Handle stream with enhanced tool detection and loading management
+async function handleStreamWithToolTracking(stream: any, loader: LoadingAnimation): Promise<void> {
+  let isFirstChunk = true;
+  let hasShownTools = false;
+  
+  const textStream = stream.toTextStream({ compatibleWithNodeStreams: true });
+  
+  // Poll for tool usage while streaming
+  const toolCheckInterval = setInterval(() => {
+    if (stream.state && !hasShownTools) {
+      // Check if there are any tool calls in progress or completed
+      const toolCalls = stream.state.toolCalls || [];
+      const pendingToolCalls = stream.state.pendingToolCalls || [];
+      
+      if (toolCalls.length > 0 || pendingToolCalls.length > 0) {
+        loader.updateMessage('Using tools');
+        
+        // Show tool usage for completed calls
+        for (const toolCall of toolCalls) {
+          if (toolCall.name && !hasShownTools) {
+            loader.stop();
+            showToolUsage(toolCall.name, toolCall.input || {});
+            hasShownTools = true;
+          }
+        }
+        
+        // Show tool usage for pending calls
+        for (const toolCall of pendingToolCalls) {
+          if (toolCall.name && !hasShownTools) {
+            loader.stop();
+            showToolUsage(toolCall.name, toolCall.input || {});
+            hasShownTools = true;
+          }
+        }
+      }
+    }
+  }, 100);
+  
+  textStream.on('data', (chunk: Buffer) => {
+    if (isFirstChunk) {
+      loader.stop();
+      clearInterval(toolCheckInterval);
+      process.stdout.write(chalk.green('🤖 '));
+      isFirstChunk = false;
+    }
+    process.stdout.write(chalk.white(chunk.toString()));
+  });
+  
+  await stream.completed;
+  clearInterval(toolCheckInterval);
+  
+  // Final check for tool usage if we missed it
+  if (!hasShownTools && stream.state && stream.state.toolCalls) {
+    const toolsUsed = new Set<string>();
+    for (const toolCall of stream.state.toolCalls) {
+      const toolName = toolCall.name;
+      if (toolName && !toolsUsed.has(toolName)) {
+        toolsUsed.add(toolName);
+        console.log(chalk.gray(`\n[Used: ${toolName}]`));
+      }
+    }
+  }
+}
+
 // Handle tool approvals with beautiful formatting
 async function handleApprovals(stream: any): Promise<any> {
   while (stream.interruptions?.length) {
@@ -71,8 +194,12 @@ async function handleApprovals(stream: any): Promise<any> {
     
     const state = stream.state;
     for (const interruption of stream.interruptions) {
+      // Show enhanced tool usage information
+      const toolName = interruption.rawItem.name;
+      const args = JSON.parse(interruption.rawItem.arguments || '{}');
+      
       console.log(chalk.cyan(`Agent: ${interruption.agent.name}`));
-      console.log(chalk.white(`Tool: ${interruption.rawItem.name}`));
+      showToolUsage(toolName, args);
       console.log(chalk.gray(`Arguments: ${interruption.rawItem.arguments}`));
       console.log();
       
@@ -154,29 +281,26 @@ async function startConversation() {
       // Add user input to history
       conversationHistory.push({ role: 'user', content: userInput });
       
-      console.log(); // Add spacing
+      // Start loading animation
+      const loader = new LoadingAnimation();
+      loader.start('Processing your request');
       
-      // Run the agent with streaming
-      let stream = await run(mainAgent, userInput, { stream: true });
-      
-      // Stream the initial response
-      let isFirstChunk = true;
-      const textStream = stream.toTextStream({ compatibleWithNodeStreams: true });
-      
-      textStream.on('data', (chunk) => {
-        if (isFirstChunk) {
-          process.stdout.write(chalk.green('🤖 '));
-          isFirstChunk = false;
-        }
-        process.stdout.write(chalk.white(chunk.toString()));
-      });
-      
-      await stream.completed;
-      
-      // Handle any tool approvals
-      stream = await handleApprovals(stream);
-      
-      console.log('\n'); // Add spacing after response
+      try {
+        // Run the agent with streaming
+        let stream = await run(mainAgent, userInput, { stream: true });
+        
+        // Monitor for tool usage and stream responses with better tool detection
+        await handleStreamWithToolTracking(stream, loader);
+        
+        // Handle any tool approvals
+        stream = await handleApprovals(stream);
+        
+        console.log('\n'); // Add spacing after response
+        
+      } catch (streamError) {
+        loader.stop();
+        throw streamError;
+      }
       
     } catch (error) {
       console.error(chalk.red('\n❌ Error occurred:'), error);
