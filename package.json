@@ -4,6 +4,7 @@
     "streamed": "tsx streamed.ts",
     "human-in-the-loop-stream": "tsx human-in-the-loop-stream.ts",
     "mega-agent": "tsx mega-agent.ts",
+    "ma": "tsx mega-agent.ts",
     "start": "tsx mega-agent.ts"
   },
   "dependencies": {

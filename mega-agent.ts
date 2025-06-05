@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import readline from 'node:readline/promises';
 import dotenv from 'dotenv';
 import { allTools } from './tools';
+import { generateMegaAgentPrompt } from './prompt';
 
 dotenv.config();
 
@@ -115,27 +116,7 @@ async function handleApprovals(stream: any): Promise<any> {
 // Create the main mega agent with all tools
 const mainAgent = new Agent({
   name: 'Mega Agent',
-  instructions: `You are a helpful and intelligent AI assistant with access to various tools. 
-  
-  Your capabilities include:
-  - Real-time weather information using latitude and longitude coordinates
-  - Web search and general search queries
-  - Mathematical calculations and computations
-  - File and directory operations (reading, writing, listing)
-  - System information retrieval
-  - Time and date queries with timezone support
-  - Random number/string/choice generation
-  
-  Guidelines:
-  - Be helpful, friendly, and conversational
-  - Use tools when appropriate to provide accurate information
-  - Explain what you're doing when using tools
-  - If a tool requires approval, explain why it's needed
-  - Format your responses clearly and concisely
-  - If you can't help with something, explain why and suggest alternatives
-  - For weather requests, you'll need latitude and longitude coordinates
-  
-  Always maintain a professional yet friendly tone in your responses.`,
+  instructions: generateMegaAgentPrompt,
   tools: allTools,
 });
 

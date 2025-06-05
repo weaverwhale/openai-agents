@@ -218,7 +218,7 @@ export const fileOperationsTool = tool({
   parameters: z.object({
     operation: z.enum(['read', 'write', 'list']).describe('The file operation to perform'),
     filepath: z.string().describe('Path to the file or directory'),
-    content: z.string().optional().describe('Content to write (only for write operation)'),
+    content: z.string().describe('Content to write (only for write operation, leave empty for read/list operations)').default(''),
   }),
   needsApproval: async (_ctx, { operation, filepath }) => {
     // Require approval for write operations or sensitive file paths
@@ -234,7 +234,7 @@ export const fileOperationsTool = tool({
           return `Content of ${filepath}:\n${fileContent}`;
         
         case 'write':
-          if (!content) throw new Error('Content is required for write operation');
+          if (!content || content.trim() === '') throw new Error('Content is required for write operation');
           await fs.writeFile(filepath, content, 'utf-8');
           return `Successfully wrote content to ${filepath}`;
         
@@ -257,11 +257,11 @@ export const timeTool = tool({
   description: 'Get current time, date, or timezone information',
   parameters: z.object({
     format: z.enum(['time', 'date', 'datetime', 'timestamp', 'timezone']).describe('The time format to return'),
-    timezone: z.string().optional().describe('Timezone (e.g., "America/New_York", "UTC")'),
+    timezone: z.string().describe('Timezone (e.g., "America/New_York", "UTC", leave empty for local timezone)').default(''),
   }),
   execute: async ({ format, timezone }) => {
     const now = new Date();
-    const options: Intl.DateTimeFormatOptions = timezone ? { timeZone: timezone } : {};
+    const options: Intl.DateTimeFormatOptions = (timezone && timezone.trim() !== '') ? { timeZone: timezone } : {};
     
     switch (format) {
       case 'time':
