@@ -52,7 +52,13 @@ function showToolUsage(toolName: string, args?: any) {
     'calculator': '🧮',
     'file_operations': '📁',
     'get_time': '⏰',
-    'system_info': '💻'
+    'system_info': '💻',
+    'generate_image': '🎨',
+    'moby': '🐋',
+    'urban_dictionary': '🗣️',
+    'wikipedia': '📚',
+    'forecast': '📈',
+    'weekly_report': '📊'
   };
   
   const emoji = toolEmojis[toolName] || '🔧';
@@ -89,6 +95,12 @@ function displayWelcome() {
   console.log(chalk.gray('• Mathematical calculations'));
   console.log(chalk.gray('• File operations'));
   console.log(chalk.gray('• System information'));
+  console.log(chalk.gray('• Image generation using AI'));
+  console.log(chalk.gray('• E-commerce analytics via Triple Whale Moby'));
+  console.log(chalk.gray('• Slang definitions via Urban Dictionary'));
+  console.log(chalk.gray('• Wikipedia summaries and information'));
+  console.log(chalk.gray('• Time series forecasting and predictions'));
+  console.log(chalk.gray('• GitHub weekly activity reports'));
   console.log(chalk.gray('• Random generation'));
   console.log(chalk.gray('• Time and date queries'));
   console.log(chalk.gray('• And much more!'));
@@ -115,6 +127,12 @@ function displayHelp() {
   console.log(chalk.gray('• Weather: "What\'s the weather at coordinates 35.6762, 139.6503?"'));
   console.log(chalk.gray('• Calculator: "Calculate 25 * 8 + 10"'));
   console.log(chalk.gray('• File ops: "List files in this directory"'));
+  console.log(chalk.gray('• Image gen: "Generate an image of a sunset over mountains"'));
+  console.log(chalk.gray('• Moby: "What are my top selling products this month?"'));
+  console.log(chalk.gray('• Urban Dict: "What does \'lit\' mean?"'));
+  console.log(chalk.gray('• Wikipedia: "Tell me about quantum computing"'));
+  console.log(chalk.gray('• Forecast: "Predict sales for next 5 days using [100,110,105,120,115]"'));
+  console.log(chalk.gray('• Weekly Report: "Generate GitHub report for user \'johndoe\'"'));
   console.log(chalk.gray('• Time: "What time is it in New York?"'));
   console.log(chalk.gray('• Random: "Generate a random number between 1 and 100"'));
   console.log(chalk.gray('• System: "Show system information"'));
