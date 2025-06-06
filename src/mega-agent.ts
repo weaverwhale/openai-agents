@@ -66,7 +66,7 @@ function showToolUsage(toolName: string, args?: any) {
   const emoji = toolEmojis[toolName] || '🔧';
   const toolDisplayName = toolName.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
 
-  console.log(chalk.bgMagenta.white.bold(`  ${emoji} USING TOOL: ${toolDisplayName}  `));
+  console.log(chalk.bgMagenta.white.bold(`  ${emoji} ${toolDisplayName}  `));
   if (args && Object.keys(args).length > 0) {
     console.log(chalk.magenta('━'.repeat(40)));
     Object.entries(args).forEach(([key, value]) => {
