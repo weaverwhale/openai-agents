@@ -108,8 +108,6 @@ async function makeGitHubGraphQLRequest<T>(
 ): Promise<GitHubGraphQLResponse<T>> {
   const url = 'https://api.github.com/graphql';
   try {
-    console.log(`Making GitHub GraphQL request: ${JSON.stringify(variables)}`);
-
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -134,11 +132,11 @@ async function makeGitHubGraphQLRequest<T>(
           waitTime = Math.min(1000 * Math.pow(2, retryCount) + Math.random() * 1000, 60000);
         }
 
-        console.log(
-          `Rate limit hit. Retrying in ${Math.floor(waitTime / 1000)} seconds (retry ${
-            retryCount + 1
-          }/${maxRetries})...`,
-        );
+        // console.log(
+        //   `Rate limit hit. Retrying in ${Math.floor(waitTime / 1000)} seconds (retry ${
+        //     retryCount + 1
+        //   }/${maxRetries})...`,
+        // );
         await new Promise((resolve) => setTimeout(resolve, waitTime));
         return makeGitHubGraphQLRequest<T>(token, query, variables, retryCount + 1, maxRetries);
       }

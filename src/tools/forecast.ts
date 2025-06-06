@@ -72,12 +72,6 @@ export const generateForecast = async (
   }
 
   try {
-    console.log('Processing forecast:', {
-      dataLength: data.length,
-      periods,
-      interval,
-    });
-
     // Validate data
     if (data.some((val) => !Number.isFinite(val))) {
       throw new Error('Invalid data points detected - all values must be valid numbers');

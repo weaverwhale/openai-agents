@@ -30,8 +30,6 @@ export const queryMoby = async (
   }
 
   try {
-    console.log('[API] Executing moby tool with params:', question, shopId);
-
     const response = await fetch(MOBY_ENDPOINT, {
       method: 'POST',
       headers: {

@@ -15,8 +15,6 @@ export const lookupUrbanDictionary = async (
   }
 
   try {
-    console.log('Searching Urban Dictionary for term:', term);
-
     // Use Urban Dictionary's API endpoint (unofficial but commonly used)
     const apiUrl = `https://api.urbandictionary.com/v0/define?term=${encodeURIComponent(term)}`;
 

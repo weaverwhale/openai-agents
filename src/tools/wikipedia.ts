@@ -15,8 +15,6 @@ export const searchWikipedia = async (
   }
 
   try {
-    console.log('Searching Wikipedia for:', query);
-
     const encodedQuery = encodeURIComponent(query.replace(/ /g, '_'));
     const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodedQuery}`;
     const response = await fetch(url);
@@ -29,7 +27,6 @@ export const searchWikipedia = async (
     }
 
     const data = await response.json();
-    console.log('Wikipedia data received');
 
     if (!data.extract) {
       return { error: 'No summary found for this topic' };
