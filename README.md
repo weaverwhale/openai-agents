@@ -14,12 +14,14 @@ A powerful conversational AI assistant that combines streaming responses, human-
 
 ## Installation
 
-1. Install dependencies:
+### 1. Install dependencies
+
 ```bash
 npm install
 ```
 
-2. Set up your environment variables:
+### 2. Set up your environment variables
+
 ```bash
 # Create a .env file with the following variables:
 OPENAI_API_KEY=your_openai_api_key_here
@@ -30,6 +32,7 @@ VISUAL_CROSSING_API_KEY=your_visual_crossing_api_key_here
 ## Usage
 
 ### Start the Mega Agent
+
 ```bash
 npm start
 # or
@@ -37,6 +40,7 @@ npm run mega-agent
 ```
 
 ### Special Commands
+
 - `help` - Show available commands and examples
 - `clear` - Clear the screen
 - `exit` or `quit` - Exit the application
@@ -111,11 +115,13 @@ export const allTools = [
 ## Human-in-the-Loop Approvals
 
 Some tools require approval before execution for security and safety:
+
 - **File Operations**: Write operations and sensitive file paths
 - **Search Tool**: Searches containing sensitive terms
 - **Custom Logic**: Any tool can implement custom approval logic
 
 When approval is required, you'll see:
+
 ```
 ⚠️  APPROVAL REQUIRED
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -128,7 +134,7 @@ Do you approve this tool usage? (y/n):
 
 ## Project Structure
 
-```
+```bash
 ├── mega-agent.ts          # Main conversational agent
 ├── tools.ts              # All tool definitions (6 tools)
 ├── openai.ts             # OpenAI client configuration
@@ -142,8 +148,10 @@ Do you approve this tool usage? (y/n):
 ## Development
 
 ### Environment Variables
+
 Create a `.env` file with:
-```
+
+```bash
 OPENAI_API_KEY=your_openai_api_key_here
 OPENAI_MODEL=gpt-4o-mini  # Optional, defaults to gpt-4o-mini
 VISUAL_CROSSING_API_KEY=your_visual_crossing_api_key_here
@@ -153,7 +161,7 @@ VISUAL_CROSSING_API_KEY=your_visual_crossing_api_key_here
 
 1. **OpenAI API Key**: Get from [OpenAI Platform](https://platform.openai.com/api-keys)
    - Used for: AI conversations and web search functionality
-   
+
 2. **Visual Crossing Weather API Key**: Get from [Visual Crossing](https://www.visualcrossing.com/weather-api)
    - Used for: Real-time weather data
 
