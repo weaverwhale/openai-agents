@@ -85,6 +85,7 @@ function displayWelcome() {
   console.log(chalk.blue('━'.repeat(50)));
   console.log(chalk.cyan('Welcome to your intelligent CLI assistant!'));
   console.log(chalk.gray('I can help you with:'));
+  console.log(chalk.gray('• Web search and general search queries'));
   console.log(chalk.gray('• Weather information'));
   console.log(chalk.gray('• Mathematical calculations'));
   console.log(chalk.gray('• File operations'));
@@ -108,8 +109,8 @@ function displayHelp() {
   console.log(chalk.gray('• "help" - Show this help message'));
   console.log();
   console.log(chalk.white('Available tools (I can use these automatically):'));
-  console.log(chalk.gray('• Weather: "What\'s the weather at coordinates 35.6762, 139.6503?"'));
   console.log(chalk.gray('• Search: "Search for information about TypeScript"'));
+  console.log(chalk.gray('• Weather: "What\'s the weather at coordinates 35.6762, 139.6503?"'));
   console.log(chalk.gray('• Calculator: "Calculate 25 * 8 + 10"'));
   console.log(chalk.gray('• File ops: "List files in this directory"'));
   console.log(chalk.gray('• Time: "What time is it in New York?"'));
