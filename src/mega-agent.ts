@@ -105,8 +105,6 @@ function displayWelcome() {
   console.log(chalk.gray('• Time and date queries'));
   console.log(chalk.gray('• And much more!'));
   console.log();
-  console.log(chalk.magenta('💬 I now remember our conversation history for better context!'));
-  console.log();
   console.log(chalk.yellow('Type "exit" to quit, "help" for assistance, "history" to see our chat, or ask me anything!'));
   console.log(chalk.blue('━'.repeat(50)));
   console.log();
