@@ -69,7 +69,6 @@ function showToolUsage(toolName: string, args?: any) {
     });
     console.log(chalk.magenta('━'.repeat(40)));
   }
-  console.log();
 }
 
 // Prompt user for yes/no confirmation
@@ -127,63 +126,85 @@ async function handleStreamWithToolTracking(stream: any, loader: LoadingAnimatio
   let isFirstChunk = true;
   let hasShownTools = false;
   
-  const textStream = stream.toTextStream({ compatibleWithNodeStreams: true });
-  
-  // Poll for tool usage while streaming
-  const toolCheckInterval = setInterval(() => {
-    if (stream.state && !hasShownTools) {
-      // Check if there are any tool calls in progress or completed
-      const toolCalls = stream.state.toolCalls || [];
-      const pendingToolCalls = stream.state.pendingToolCalls || [];
-      
-      if (toolCalls.length > 0 || pendingToolCalls.length > 0) {
-        loader.updateMessage('Using tools');
-        
-        // Show tool usage for completed calls
-        for (const toolCall of toolCalls) {
-          if (toolCall.name && !hasShownTools) {
+  try {
+    // Use event iteration to handle both text and tool detection
+    for await (const event of stream) {
+      // Handle raw model events for text output
+      if (event.type === 'raw_model_stream_event') {
+        // Handle text deltas - fix the condition based on debug output
+        if (event.data?.type === 'output_text_delta' && event.data?.delta) {
+          if (isFirstChunk) {
             loader.stop();
-            showToolUsage(toolCall.name, toolCall.input || {});
-            hasShownTools = true;
-          }
-        }
-        
-        // Show tool usage for pending calls
-        for (const toolCall of pendingToolCalls) {
-          if (toolCall.name && !hasShownTools) {
-            loader.stop();
-            showToolUsage(toolCall.name, toolCall.input || {});
-            hasShownTools = true;
+            // Don't add \n - the loader.stop() already positions us correctly
+            process.stdout.write(chalk.green('🤖 '));
+            isFirstChunk = false;
+            process.stdout.write(chalk.white(event.data.delta));
+          } else {
+            process.stdout.write(chalk.white(event.data.delta));
           }
         }
       }
-    }
-  }, 100);
-  
-  textStream.on('data', (chunk: Buffer) => {
-    if (isFirstChunk) {
-      loader.stop();
-      clearInterval(toolCheckInterval);
-      process.stdout.write(chalk.green('🤖 '));
-      isFirstChunk = false;
-    }
-    process.stdout.write(chalk.white(chunk.toString()));
-  });
-  
-  await stream.completed;
-  clearInterval(toolCheckInterval);
-  
-  // Final check for tool usage if we missed it
-  if (!hasShownTools && stream.state && stream.state.toolCalls) {
-    const toolsUsed = new Set<string>();
-    for (const toolCall of stream.state.toolCalls) {
-      const toolName = toolCall.name;
-      if (toolName && !toolsUsed.has(toolName)) {
-        toolsUsed.add(toolName);
-        console.log(chalk.gray(`\n[Used: ${toolName}]`));
+      // Handle run item events for tool calls
+      else if (event.type === 'run_item_stream_event') {
+        if (event.item?.type === 'tool_call_item' && !hasShownTools) {
+          if (!isFirstChunk) {
+            process.stdout.write('\n'); // Add newline before tool usage display
+          }
+          loader.stop();
+          
+          // Extract tool name and arguments from the correct location
+          const toolName = event.item.rawItem?.name || 'unknown_tool';
+          
+          let toolArgs = {};
+          try {
+            // Arguments are stored as a JSON string in rawItem.arguments
+            if (event.item.rawItem?.arguments) {
+              toolArgs = JSON.parse(event.item.rawItem.arguments);
+            }
+          } catch (error) {
+            // If parsing fails, use the raw string
+            toolArgs = { arguments: event.item.rawItem?.arguments || 'No arguments' };
+          }
+          
+          showToolUsage(toolName, toolArgs);
+          hasShownTools = true;
+          // Start a new loader for tool execution (no extra spacing)
+          loader.start('Executing tool');
+        }
+        else if (event.item?.type === 'tool_call_output_item' && hasShownTools) {
+          loader.stop();
+          loader.start('Processing results');
+        }
       }
+      // Handle agent updates
+      else if (event.type === 'agent_updated_stream_event') {
+        if (!isFirstChunk) {
+          console.log(chalk.cyan(`\n[Agent switched to: ${event.agent?.name || 'Unknown'}]`));
+        }
+      }
+    }
+  } catch (error) {
+    loader.stop();
+    console.log(chalk.red('\n❌ Streaming error:'), error);
+    // Fallback to toTextStream if event iteration fails
+    try {
+      console.log(chalk.yellow('Falling back to text stream...'));
+      const textStream = stream.toTextStream({ compatibleWithNodeStreams: true });
+      textStream.on('data', (chunk: Buffer) => {
+        if (isFirstChunk) {
+          process.stdout.write(chalk.green('🤖 '));
+          isFirstChunk = false;
+        }
+        process.stdout.write(chalk.white(chunk.toString()));
+      });
+      await stream.completed;
+    } catch (fallbackError) {
+      console.log(chalk.red('Text streaming also failed:'), fallbackError);
     }
   }
+  
+  // Ensure loader is stopped
+  loader.stop();
 }
 
 // Handle tool approvals with beautiful formatting
@@ -223,19 +244,46 @@ async function handleApprovals(stream: any): Promise<any> {
     // Resume execution with streaming output
     stream = await run(mainAgent, state, { stream: true });
     
-    // Stream the response with beautiful formatting
+    // Use single event iteration approach for resumed execution
     let isFirstChunk = true;
-    const textStream = stream.toTextStream({ compatibleWithNodeStreams: true });
     
-    textStream.on('data', (chunk) => {
-      if (isFirstChunk) {
-        process.stdout.write(chalk.green('🤖 '));
-        isFirstChunk = false;
+    try {
+      for await (const event of stream) {
+        // Handle raw model events for text output
+        if (event.type === 'raw_model_stream_event') {
+          // Handle text deltas - fix the condition
+          if (event.data?.type === 'output_text_delta' && event.data?.delta) {
+            if (isFirstChunk) {
+              process.stdout.write(chalk.green('🤖 '));
+              isFirstChunk = false;
+            }
+            process.stdout.write(chalk.white(event.data.delta));
+          }
+        }
+        // Handle run item events for tool calls during resumed execution
+        else if (event.type === 'run_item_stream_event') {
+          if (event.item?.type === 'tool_call_item') {
+            console.log(chalk.gray(`\n[Tool called: ${event.item.name}]`));
+          }
+        }
       }
-      process.stdout.write(chalk.white(chunk.toString()));
-    });
-    
-    await stream.completed;
+    } catch (error) {
+      console.log(chalk.red('\n❌ Resume streaming error:'), error);
+      // Fallback to toTextStream
+      try {
+        const textStream = stream.toTextStream({ compatibleWithNodeStreams: true });
+        textStream.on('data', (chunk: Buffer) => {
+          if (isFirstChunk) {
+            process.stdout.write(chalk.green('🤖 '));
+            isFirstChunk = false;
+          }
+          process.stdout.write(chalk.white(chunk.toString()));
+        });
+        await stream.completed;
+      } catch (fallbackError) {
+        console.log(chalk.red('Resume text streaming also failed:'), fallbackError);
+      }
+    }
   }
   
   return stream;
@@ -290,11 +338,11 @@ async function startConversation() {
         // Run the agent with streaming
         let stream = await run(mainAgent, userInput, { stream: true });
         
-        // Monitor for tool usage and stream responses with better tool detection
+        // Monitor for tool usage and stream responses with proper event handling
         await handleStreamWithToolTracking(stream, loader);
         
         // Handle any tool approvals
-        stream = await handleApprovals(stream);
+        await handleApprovals(stream);
         
         console.log('\n'); // Add spacing after response
         
