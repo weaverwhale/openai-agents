@@ -42,4 +42,4 @@ export const allTools = [
   wikipediaTool,
   forecastTool,
   weeklyReportTool,
-]; 
+];

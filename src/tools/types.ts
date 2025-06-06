@@ -21,4 +21,4 @@ export interface WeatherData {
   humidity: number;
   windSpeed: number;
   feelsLike: number;
-} 
+}

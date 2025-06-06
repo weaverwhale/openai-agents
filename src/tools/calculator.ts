@@ -6,7 +6,9 @@ export const calculatorTool = tool({
   name: 'calculator',
   description: 'Perform mathematical calculations',
   parameters: z.object({
-    expression: z.string().describe('Mathematical expression to evaluate (e.g., "2 + 2", "sqrt(16)", "sin(30)")'),
+    expression: z
+      .string()
+      .describe('Mathematical expression to evaluate (e.g., "2 + 2", "sqrt(16)", "sin(30)")'),
   }),
   execute: async ({ expression }) => {
     try {
@@ -18,4 +20,4 @@ export const calculatorTool = tool({
       return `Error calculating "${expression}": ${error}`;
     }
   },
-}); 
+});

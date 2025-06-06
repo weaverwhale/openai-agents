@@ -23,10 +23,12 @@ class LoadingAnimation {
   start(message: string = 'Thinking') {
     this.message = message;
     this.frame = 0;
-    
+
     process.stdout.write('\n');
     this.interval = setInterval(() => {
-      process.stdout.write(`\r${chalk.cyan(this.frames[this.frame])} ${chalk.gray(this.message)}...`);
+      process.stdout.write(
+        `\r${chalk.cyan(this.frames[this.frame])} ${chalk.gray(this.message)}...`,
+      );
       this.frame = (this.frame + 1) % this.frames.length;
     }, 100);
   }
@@ -47,30 +49,29 @@ class LoadingAnimation {
 // Tool usage indicator
 function showToolUsage(toolName: string, args?: any) {
   const toolEmojis: { [key: string]: string } = {
-    'get_weather': '🌤️',
-    'search': '🔍',
-    'calculator': '🧮',
-    'file_operations': '📁',
-    'get_time': '⏰',
-    'system_info': '💻',
-    'generate_image': '🎨',
-    'moby': '🐋',
-    'urban_dictionary': '🗣️',
-    'wikipedia': '📚',
-    'forecast': '📈',
-    'weekly_report': '📊'
+    get_weather: '🌤️',
+    search: '🔍',
+    calculator: '🧮',
+    file_operations: '📁',
+    get_time: '⏰',
+    system_info: '💻',
+    generate_image: '🎨',
+    moby: '🐋',
+    urban_dictionary: '🗣️',
+    wikipedia: '📚',
+    forecast: '📈',
+    weekly_report: '📊',
   };
-  
+
   const emoji = toolEmojis[toolName] || '🔧';
-  const toolDisplayName = toolName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-  
+  const toolDisplayName = toolName.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+
   console.log(chalk.bgMagenta.white.bold(`  ${emoji} USING TOOL: ${toolDisplayName}  `));
   if (args && Object.keys(args).length > 0) {
     console.log(chalk.magenta('━'.repeat(40)));
     Object.entries(args).forEach(([key, value]) => {
-      const displayValue = typeof value === 'string' && value.length > 50 
-        ? value.substring(0, 50) + '...' 
-        : value;
+      const displayValue =
+        typeof value === 'string' && value.length > 50 ? value.substring(0, 50) + '...' : value;
       console.log(chalk.gray(`${key}: ${displayValue}`));
     });
     console.log(chalk.magenta('━'.repeat(40)));
@@ -105,7 +106,11 @@ function displayWelcome() {
   console.log(chalk.gray('• Time and date queries'));
   console.log(chalk.gray('• And much more!'));
   console.log();
-  console.log(chalk.yellow('Type "exit" to quit, "help" for assistance, "history" to see our chat, or ask me anything!'));
+  console.log(
+    chalk.yellow(
+      'Type "exit" to quit, "help" for assistance, "history" to see our chat, or ask me anything!',
+    ),
+  );
   console.log(chalk.blue('━'.repeat(50)));
   console.log();
 }
@@ -129,7 +134,9 @@ function displayHelp() {
   console.log(chalk.gray('• Moby: "What are my top selling products this month?"'));
   console.log(chalk.gray('• Urban Dict: "What does \'lit\' mean?"'));
   console.log(chalk.gray('• Wikipedia: "Tell me about quantum computing"'));
-  console.log(chalk.gray('• Forecast: "Predict sales for next 5 days using [100,110,105,120,115]"'));
+  console.log(
+    chalk.gray('• Forecast: "Predict sales for next 5 days using [100,110,105,120,115]"'),
+  );
   console.log(chalk.gray('• Weekly Report: "Generate GitHub report for user \'johndoe\'"'));
   console.log(chalk.gray('• Time: "What time is it in New York?"'));
   console.log(chalk.gray('• Random: "Generate a random number between 1 and 100"'));
@@ -141,11 +148,14 @@ function displayHelp() {
 }
 
 // Handle stream with enhanced tool detection and loading management
-async function handleStreamWithToolTracking(stream: any, loader: LoadingAnimation): Promise<string> {
+async function handleStreamWithToolTracking(
+  stream: any,
+  loader: LoadingAnimation,
+): Promise<string> {
   let isFirstChunk = true;
   let hasShownTools = false;
   let accumulatedResponse = '';
-  
+
   try {
     // Use event iteration to handle both text and tool detection
     for await (const event of stream) {
@@ -173,10 +183,10 @@ async function handleStreamWithToolTracking(stream: any, loader: LoadingAnimatio
             process.stdout.write('\n'); // Add newline before tool usage display
           }
           loader.stop();
-          
+
           // Extract tool name and arguments from the correct location
           const toolName = event.item.rawItem?.name || 'unknown_tool';
-          
+
           let toolArgs = {};
           try {
             // Arguments are stored as a JSON string in rawItem.arguments
@@ -187,13 +197,12 @@ async function handleStreamWithToolTracking(stream: any, loader: LoadingAnimatio
             // If parsing fails, use the raw string
             toolArgs = { arguments: event.item.rawItem?.arguments || 'No arguments' };
           }
-          
+
           showToolUsage(toolName, toolArgs);
           hasShownTools = true;
           // Start a new loader for tool execution (no extra spacing)
           loader.start('Executing tool');
-        }
-        else if (event.item?.type === 'tool_call_output_item' && hasShownTools) {
+        } else if (event.item?.type === 'tool_call_output_item' && hasShownTools) {
           loader.stop();
           loader.start('Processing results');
         }
@@ -226,10 +235,10 @@ async function handleStreamWithToolTracking(stream: any, loader: LoadingAnimatio
       console.log(chalk.red('Text streaming also failed:'), fallbackError);
     }
   }
-  
+
   // Ensure loader is stopped
   loader.stop();
-  
+
   return accumulatedResponse.trim();
 }
 
@@ -239,20 +248,20 @@ async function handleApprovals(stream: any): Promise<any> {
     console.log();
     console.log(chalk.bgYellow.black.bold('  ⚠️  APPROVAL REQUIRED  '));
     console.log(chalk.yellow('━'.repeat(40)));
-    
+
     const state = stream.state;
     for (const interruption of stream.interruptions) {
       // Show enhanced tool usage information
       const toolName = interruption.rawItem.name;
       const args = JSON.parse(interruption.rawItem.arguments || '{}');
-      
+
       console.log(chalk.cyan(`Agent: ${interruption.agent.name}`));
       showToolUsage(toolName, args);
       console.log(chalk.gray(`Arguments: ${interruption.rawItem.arguments}`));
       console.log();
-      
+
       const approved = await confirm('Do you approve this tool usage?');
-      
+
       if (approved) {
         console.log(chalk.green('✅ Approved'));
         state.approve(interruption);
@@ -269,10 +278,10 @@ async function handleApprovals(stream: any): Promise<any> {
 
     // Resume execution with streaming output
     stream = await run(mainAgent, state, { stream: true });
-    
+
     // Use single event iteration approach for resumed execution
     let isFirstChunk = true;
-    
+
     try {
       for await (const event of stream) {
         // Handle raw model events for text output
@@ -311,7 +320,7 @@ async function handleApprovals(stream: any): Promise<any> {
       }
     }
   }
-  
+
   return stream;
 }
 
@@ -325,31 +334,31 @@ const mainAgent = new Agent({
 // Main conversation loop
 async function startConversation() {
   displayWelcome();
-  
+
   let conversationHistory: Array<{ role: string; content: string }> = [];
-  
+
   while (true) {
     try {
       // Get user input
       const userInput = await rl.question(chalk.blue('You: '));
-      
+
       // Handle special commands
       if (userInput.toLowerCase().trim() === 'exit' || userInput.toLowerCase().trim() === 'quit') {
         console.log(chalk.green('\n👋 Goodbye! Thanks for using Mega Agent!'));
         break;
       }
-      
+
       if (userInput.toLowerCase().trim() === 'clear') {
         conversationHistory = []; // Reset conversation history
         displayWelcome();
         continue;
       }
-      
+
       if (userInput.toLowerCase().trim() === 'help') {
         displayHelp();
         continue;
       }
-      
+
       if (userInput.toLowerCase().trim() === 'history') {
         console.log(chalk.bgCyan.white.bold('  📚 CONVERSATION HISTORY  '));
         console.log(chalk.cyan('━'.repeat(50)));
@@ -360,7 +369,9 @@ async function startConversation() {
             const roleColor = msg.role === 'user' ? chalk.blue : chalk.green;
             const roleLabel = msg.role === 'user' ? 'You' : '🤖 Agent';
             console.log(roleColor(`${index + 1}. ${roleLabel}:`));
-            console.log(chalk.gray(`   ${msg.content.slice(0, 100)}${msg.content.length > 100 ? '...' : ''}`));
+            console.log(
+              chalk.gray(`   ${msg.content.slice(0, 100)}${msg.content.length > 100 ? '...' : ''}`),
+            );
             console.log();
           });
         }
@@ -368,53 +379,51 @@ async function startConversation() {
         console.log();
         continue;
       }
-      
+
       if (userInput.trim() === '') {
         continue;
       }
-      
+
       // Add user input to history
       conversationHistory.push({ role: 'user', content: userInput });
-      
+
       // Start loading animation
       const loader = new LoadingAnimation();
       loader.start('Processing your request');
-      
+
       try {
         // Convert conversation history to AgentInputItem format
-        const agentInputItems = conversationHistory.map(msg => ({
-          role: msg.role === 'user' ? 'user' as const : 'system' as const,
+        const agentInputItems = conversationHistory.map((msg) => ({
+          role: msg.role === 'user' ? ('user' as const) : ('system' as const),
           content: msg.content,
-          type: 'message' as const
+          type: 'message' as const,
         }));
-        
+
         // Run the agent with conversation history for context
         let stream = await run(mainAgent, agentInputItems, { stream: true });
-        
+
         // Monitor for tool usage and stream responses with proper event handling
         const agentResponse = await handleStreamWithToolTracking(stream, loader);
-        
+
         // Add agent response to conversation history
         if (agentResponse) {
           conversationHistory.push({ role: 'assistant', content: agentResponse });
         }
-        
+
         // Handle any tool approvals
         await handleApprovals(stream);
-        
+
         console.log('\n'); // Add spacing after response
-        
       } catch (streamError) {
         loader.stop();
         throw streamError;
       }
-      
     } catch (error) {
       console.error(chalk.red('\n❌ Error occurred:'), error);
       console.log(chalk.yellow('Please try again with a different question.\n'));
     }
   }
-  
+
   rl.close();
 }
 
@@ -441,4 +450,4 @@ export { mainAgent, allTools };
 // Run if this file is executed directly
 if (require.main === module) {
   main().catch(console.error);
-} 
+}

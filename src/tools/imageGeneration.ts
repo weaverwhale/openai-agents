@@ -19,7 +19,9 @@ if (!fs.existsSync(IMAGES_DIR)) {
 }
 
 // Image generation function
-export const generateImageFunction = async (prompt: string): Promise<{ image: string } | { error: string }> => {
+export const generateImageFunction = async (
+  prompt: string,
+): Promise<{ image: string } | { error: string }> => {
   if (!prompt) {
     return { error: 'Prompt is required' };
   }
@@ -68,9 +70,7 @@ export const imageGenerationTool = tool({
   needsApproval: async (_ctx, { prompt }) => {
     // Add approval logic for potentially inappropriate content
     const inappropriateTerms = ['nude', 'violence', 'explicit', 'nsfw'];
-    return inappropriateTerms.some(term => 
-      prompt.toLowerCase().includes(term.toLowerCase())
-    );
+    return inappropriateTerms.some((term) => prompt.toLowerCase().includes(term.toLowerCase()));
   },
   execute: async ({ prompt }) => {
     try {
@@ -79,21 +79,23 @@ export const imageGenerationTool = tool({
       }
 
       const result = await generateImageFunction(prompt.trim());
-      
+
       // Check if there was an error
       if ('error' in result) {
         throw new Error(result.error);
       }
-      
+
       let response = `🎨 **Image Generated Successfully!**\n\n`;
       response += `📝 **Prompt:** "${prompt}"\n`;
       response += `🖼️ **Image saved to:** ${result.image}\n`;
       response += `📁 **Full path:** ${path.resolve(IMAGES_DIR, path.basename(result.image))}\n\n`;
       response += `Your image has been generated and saved locally. You can find it in the uploads directory.`;
-      
+
       return response;
     } catch (error) {
-      return `Error generating image: ${error instanceof Error ? error.message : 'Unknown error occurred'}`;
+      return `Error generating image: ${
+        error instanceof Error ? error.message : 'Unknown error occurred'
+      }`;
     }
   },
-}); 
+});

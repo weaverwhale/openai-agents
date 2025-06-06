@@ -49,9 +49,7 @@ export const searchTool = tool({
   needsApproval: async (_ctx, { query }) => {
     // You can add approval logic for sensitive searches if needed
     const sensitiveTerms = ['personal information', 'private data', 'passwords'];
-    return sensitiveTerms.some(term => 
-      query.toLowerCase().includes(term.toLowerCase())
-    );
+    return sensitiveTerms.some((term) => query.toLowerCase().includes(term.toLowerCase()));
   },
   execute: async ({ query }) => {
     try {
@@ -60,15 +58,15 @@ export const searchTool = tool({
       }
 
       const searchResults = await search(query.trim());
-      
+
       // Check if there was an error
       if ('error' in searchResults) {
         throw new Error(searchResults.error);
       }
-      
+
       let response = `🔍 Search Results for: "${query}"\n\n`;
       response += `📝 **Answer:**\n${searchResults.answer}\n\n`;
-      
+
       if (searchResults.sources && searchResults.sources.length > 0) {
         response += `📊 **Sources:** (${searchResults.sources.length} found)\n`;
         searchResults.sources.forEach((source, index) => {
@@ -77,10 +75,12 @@ export const searchTool = tool({
           response += `   📝 ${source.snippet}\n\n`;
         });
       }
-      
+
       return response;
     } catch (error) {
-      return `Error performing search: ${error instanceof Error ? error.message : 'Unknown error occurred'}`;
+      return `Error performing search: ${
+        error instanceof Error ? error.message : 'Unknown error occurred'
+      }`;
     }
   },
-}); 
+});

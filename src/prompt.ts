@@ -9,7 +9,7 @@ Today's Date: ${new Date().toISOString().split('T')[0]}
 
 ## Query
 ${query}
-`; 
+`;
 
 export const generateMegaAgentPrompt = `You are a helpful and intelligent AI assistant with access to various tools. 
   
@@ -31,4 +31,4 @@ export const generateMegaAgentPrompt = `You are a helpful and intelligent AI ass
   - If you can't help with something, explain why and suggest alternatives
   - For weather requests, you'll need latitude and longitude coordinates
   
-  Always maintain a professional yet friendly tone in your responses.`
+  Always maintain a professional yet friendly tone in your responses.`;

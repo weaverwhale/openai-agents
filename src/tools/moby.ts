@@ -20,7 +20,11 @@ type MobyParams = {
 };
 
 // Moby query function
-export const queryMoby = async (question: string, shopId: string, parentMessageId?: string | null): Promise<{ answer: string } | { error: string }> => {
+export const queryMoby = async (
+  question: string,
+  shopId: string,
+  parentMessageId?: string | null,
+): Promise<{ answer: string } | { error: string }> => {
   if (!question) {
     return { error: 'Question is required' };
   }
@@ -69,27 +73,25 @@ export const queryMoby = async (question: string, shopId: string, parentMessageI
 // Moby Tool
 export const mobyTool = tool({
   name: 'moby',
-  description: "Get e-commerce analytics and insights from Triple Whale's AI, Moby. Useful for Shopify store analytics, sales data, customer insights, and business metrics.",
+  description:
+    "Get e-commerce analytics and insights from Triple Whale's AI, Moby. Useful for Shopify store analytics, sales data, customer insights, and business metrics.",
   parameters: z.object({
     question: z
       .string()
       .describe('Question to ask Triple Whale Moby about e-commerce analytics')
       .default('What is triple whale?'),
-    shopId: z
-      .string()
-      .describe('Shopify store URL')  
-      .default('madisonbraids.myshopify.com'),
+    shopId: z.string().describe('Shopify store URL').default('madisonbraids.myshopify.com'),
   }),
   needsApproval: async (_ctx, { question, shopId }) => {
     // Add approval logic for sensitive business queries
     const sensitiveTerms = ['financial data', 'customer emails', 'private information', 'api keys'];
-    const isSensitive = sensitiveTerms.some(term => 
-      question.toLowerCase().includes(term.toLowerCase())
+    const isSensitive = sensitiveTerms.some((term) =>
+      question.toLowerCase().includes(term.toLowerCase()),
     );
-    
+
     // Also require approval for non-default shop IDs
     const isNonDefaultShop = shopId !== 'madisonbraids.myshopify.com';
-    
+
     return Boolean(isSensitive || isNonDefaultShop);
   },
   execute: async ({ question, shopId }) => {
@@ -101,12 +103,12 @@ export const mobyTool = tool({
       // Always generate a new UUID for conversation context
       const parentMessageId = generateUUID();
       const result = await queryMoby(question.trim(), shopId, parentMessageId);
-      
+
       // Check if there was an error
       if ('error' in result) {
         throw new Error(result.error);
       }
-      
+
       let response = `🐋 **Triple Whale Moby Analytics**\n\n`;
       response += `❓ **Question:** "${question}"\n`;
       if (shopId !== 'madisonbraids.myshopify.com') {
@@ -114,10 +116,12 @@ export const mobyTool = tool({
       }
       response += `\n📊 **Moby's Response:**\n${result.answer}\n\n`;
       response += `💡 *Powered by Triple Whale's AI Analytics*`;
-      
+
       return response;
     } catch (error) {
-      return `Error querying Moby: ${error instanceof Error ? error.message : 'Unknown error occurred'}`;
+      return `Error querying Moby: ${
+        error instanceof Error ? error.message : 'Unknown error occurred'
+      }`;
     }
   },
-}); 
+});

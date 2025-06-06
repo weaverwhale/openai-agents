@@ -6,13 +6,19 @@ export const timeTool = tool({
   name: 'get_time',
   description: 'Get current time, date, or timezone information',
   parameters: z.object({
-    format: z.enum(['time', 'date', 'datetime', 'timestamp', 'timezone']).describe('The time format to return'),
-    timezone: z.string().describe('Timezone (e.g., "America/New_York", "UTC", leave empty for local timezone)').default(''),
+    format: z
+      .enum(['time', 'date', 'datetime', 'timestamp', 'timezone'])
+      .describe('The time format to return'),
+    timezone: z
+      .string()
+      .describe('Timezone (e.g., "America/New_York", "UTC", leave empty for local timezone)')
+      .default(''),
   }),
   execute: async ({ format, timezone }) => {
     const now = new Date();
-    const options: Intl.DateTimeFormatOptions = (timezone && timezone.trim() !== '') ? { timeZone: timezone } : {};
-    
+    const options: Intl.DateTimeFormatOptions =
+      timezone && timezone.trim() !== '' ? { timeZone: timezone } : {};
+
     switch (format) {
       case 'time':
         return `Current time: ${now.toLocaleTimeString('en-US', options)}`;
@@ -28,4 +34,4 @@ export const timeTool = tool({
         return `Current date and time: ${now.toLocaleString('en-US', options)}`;
     }
   },
-}); 
+});

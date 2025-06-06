@@ -7,14 +7,16 @@ type WikipediaParams = {
 };
 
 // Wikipedia lookup function
-export const searchWikipedia = async (query: string): Promise<{ summary: string; url?: string; title?: string } | { error: string }> => {
+export const searchWikipedia = async (
+  query: string,
+): Promise<{ summary: string; url?: string; title?: string } | { error: string }> => {
   if (!query) {
     return { error: 'Query is required' };
   }
 
   try {
     console.log('Searching Wikipedia for:', query);
-    
+
     const encodedQuery = encodeURIComponent(query.replace(/ /g, '_'));
     const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodedQuery}`;
     const response = await fetch(url);
@@ -36,7 +38,7 @@ export const searchWikipedia = async (query: string): Promise<{ summary: string;
     return {
       summary: data.extract,
       url: data.content_urls?.desktop?.page,
-      title: data.title
+      title: data.title,
     };
   } catch (error) {
     console.error('Error fetching from Wikipedia:', error);
@@ -48,17 +50,18 @@ export const searchWikipedia = async (query: string): Promise<{ summary: string;
 // Wikipedia Tool
 export const wikipediaTool = tool({
   name: 'wikipedia',
-  description: 'Get quick summaries and information from Wikipedia. Useful for looking up facts, definitions, historical information, and general knowledge topics.',
+  description:
+    'Get quick summaries and information from Wikipedia. Useful for looking up facts, definitions, historical information, and general knowledge topics.',
   parameters: z.object({
     query: z.string().describe('The topic to search on Wikipedia'),
   }),
   needsApproval: async (_ctx, { query }) => {
     // Generally Wikipedia content is safe, but we might want approval for certain topics
     const sensitiveTopics = ['controversial', 'political figure', 'war crimes', 'terrorism'];
-    const isSensitive = sensitiveTopics.some(topic => 
-      query.toLowerCase().includes(topic.toLowerCase())
+    const isSensitive = sensitiveTopics.some((topic) =>
+      query.toLowerCase().includes(topic.toLowerCase()),
     );
-    
+
     return isSensitive; // Only require approval for potentially sensitive topics
   },
   execute: async ({ query }) => {
@@ -68,30 +71,32 @@ export const wikipediaTool = tool({
       }
 
       const result = await searchWikipedia(query.trim());
-      
+
       // Check if there was an error
       if ('error' in result) {
         throw new Error(result.error);
       }
-      
+
       let response = `📚 **Wikipedia Summary**\n\n`;
-      
+
       if (result.title) {
         response += `📖 **Title:** ${result.title}\n\n`;
       }
-      
+
       response += `🔍 **Search Query:** "${query}"\n\n`;
       response += `📄 **Summary:**\n${result.summary}\n\n`;
-      
+
       if (result.url) {
         response += `🔗 **Read More:** ${result.url}\n\n`;
       }
-      
+
       response += `📝 *Source: Wikipedia*`;
-      
+
       return response;
     } catch (error) {
-      return `Error searching Wikipedia: ${error instanceof Error ? error.message : 'Unknown error occurred'}`;
+      return `Error searching Wikipedia: ${
+        error instanceof Error ? error.message : 'Unknown error occurred'
+      }`;
     }
   },
-}); 
+});

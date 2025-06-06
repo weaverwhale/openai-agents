@@ -325,7 +325,9 @@ export const createWeeklyReport = async (
 
   const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
   if (!GITHUB_TOKEN) {
-    return { error: 'GitHub token is required. Please set GITHUB_TOKEN in your environment variables.' };
+    return {
+      error: 'GitHub token is required. Please set GITHUB_TOKEN in your environment variables.',
+    };
   }
 
   try {
@@ -368,7 +370,8 @@ export const createWeeklyReport = async (
 // Weekly Report Tool
 export const weeklyReportTool = tool({
   name: 'weekly_report',
-  description: 'Generate comprehensive GitHub activity reports including contribution statistics for a specific user over a weekly period. Useful for team reports, performance reviews, and activity tracking.',
+  description:
+    'Generate comprehensive GitHub activity reports including contribution statistics for a specific user over a weekly period. Useful for team reports, performance reviews, and activity tracking.',
   parameters: z.object({
     username: z.string().describe('GitHub username to generate report for'),
     offset: z
@@ -400,13 +403,21 @@ export const weeklyReportTool = tool({
       }
 
       // Set repos, startDate, endDate to undefined since they're not exposed as parameters
-      const result = await createWeeklyReport(username, offset, undefined, generateSummary, organization, undefined, undefined);
-      
+      const result = await createWeeklyReport(
+        username,
+        offset,
+        undefined,
+        generateSummary,
+        organization,
+        undefined,
+        undefined,
+      );
+
       // Check if there was an error
       if ('error' in result) {
         throw new Error(result.error);
       }
-      
+
       let response = `📊 **GitHub Weekly Report Generated**\n\n`;
       response += `👤 **User:** ${username}\n`;
       response += `🏢 **Organization:** ${organization}\n`;
@@ -414,10 +425,12 @@ export const weeklyReportTool = tool({
         response += `📅 **Week Offset:** ${offset} weeks ago\n`;
       }
       response += `\n---\n\n${result.report}`;
-      
+
       return response;
     } catch (error) {
-      return `Error generating weekly report: ${error instanceof Error ? error.message : 'Unknown error occurred'}`;
+      return `Error generating weekly report: ${
+        error instanceof Error ? error.message : 'Unknown error occurred'
+      }`;
     }
   },
-}); 
+});
