@@ -93,7 +93,9 @@ function displayWelcome() {
   console.log(chalk.gray('• Time and date queries'));
   console.log(chalk.gray('• And much more!'));
   console.log();
-  console.log(chalk.yellow('Type "exit" to quit, "help" for assistance, or ask me anything!'));
+  console.log(chalk.magenta('💬 I now remember our conversation history for better context!'));
+  console.log();
+  console.log(chalk.yellow('Type "exit" to quit, "help" for assistance, "history" to see our chat, or ask me anything!'));
   console.log(chalk.blue('━'.repeat(50)));
   console.log();
 }
@@ -104,7 +106,8 @@ function displayHelp() {
   console.log(chalk.green('━'.repeat(50)));
   console.log(chalk.white('General commands:'));
   console.log(chalk.gray('• "exit" or "quit" - Exit the application'));
-  console.log(chalk.gray('• "clear" - Clear the screen'));
+  console.log(chalk.gray('• "clear" - Clear the screen and reset conversation history'));
+  console.log(chalk.gray('• "history" - Show conversation history'));
   console.log(chalk.gray('• "help" - Show this help message'));
   console.log();
   console.log(chalk.white('Available tools (I can use these automatically):'));
@@ -122,9 +125,10 @@ function displayHelp() {
 }
 
 // Handle stream with enhanced tool detection and loading management
-async function handleStreamWithToolTracking(stream: any, loader: LoadingAnimation): Promise<void> {
+async function handleStreamWithToolTracking(stream: any, loader: LoadingAnimation): Promise<string> {
   let isFirstChunk = true;
   let hasShownTools = false;
+  let accumulatedResponse = '';
   
   try {
     // Use event iteration to handle both text and tool detection
@@ -142,6 +146,8 @@ async function handleStreamWithToolTracking(stream: any, loader: LoadingAnimatio
           } else {
             process.stdout.write(chalk.white(event.data.delta));
           }
+          // Accumulate the response text for conversation history
+          accumulatedResponse += event.data.delta;
         }
       }
       // Handle run item events for tool calls
@@ -191,11 +197,13 @@ async function handleStreamWithToolTracking(stream: any, loader: LoadingAnimatio
       console.log(chalk.yellow('Falling back to text stream...'));
       const textStream = stream.toTextStream({ compatibleWithNodeStreams: true });
       textStream.on('data', (chunk: Buffer) => {
+        const chunkText = chunk.toString();
         if (isFirstChunk) {
           process.stdout.write(chalk.green('🤖 '));
           isFirstChunk = false;
         }
-        process.stdout.write(chalk.white(chunk.toString()));
+        process.stdout.write(chalk.white(chunkText));
+        accumulatedResponse += chunkText;
       });
       await stream.completed;
     } catch (fallbackError) {
@@ -205,6 +213,8 @@ async function handleStreamWithToolTracking(stream: any, loader: LoadingAnimatio
   
   // Ensure loader is stopped
   loader.stop();
+  
+  return accumulatedResponse.trim();
 }
 
 // Handle tool approvals with beautiful formatting
@@ -314,12 +324,32 @@ async function startConversation() {
       }
       
       if (userInput.toLowerCase().trim() === 'clear') {
+        conversationHistory = []; // Reset conversation history
         displayWelcome();
         continue;
       }
       
       if (userInput.toLowerCase().trim() === 'help') {
         displayHelp();
+        continue;
+      }
+      
+      if (userInput.toLowerCase().trim() === 'history') {
+        console.log(chalk.bgCyan.white.bold('  📚 CONVERSATION HISTORY  '));
+        console.log(chalk.cyan('━'.repeat(50)));
+        if (conversationHistory.length === 0) {
+          console.log(chalk.gray('No conversation history yet.'));
+        } else {
+          conversationHistory.forEach((msg, index) => {
+            const roleColor = msg.role === 'user' ? chalk.blue : chalk.green;
+            const roleLabel = msg.role === 'user' ? 'You' : '🤖 Agent';
+            console.log(roleColor(`${index + 1}. ${roleLabel}:`));
+            console.log(chalk.gray(`   ${msg.content.slice(0, 100)}${msg.content.length > 100 ? '...' : ''}`));
+            console.log();
+          });
+        }
+        console.log(chalk.cyan('━'.repeat(50)));
+        console.log();
         continue;
       }
       
@@ -335,11 +365,23 @@ async function startConversation() {
       loader.start('Processing your request');
       
       try {
-        // Run the agent with streaming
-        let stream = await run(mainAgent, userInput, { stream: true });
+        // Convert conversation history to AgentInputItem format
+        const agentInputItems = conversationHistory.map(msg => ({
+          role: msg.role === 'user' ? 'user' as const : 'system' as const,
+          content: msg.content,
+          type: 'message' as const
+        }));
+        
+        // Run the agent with conversation history for context
+        let stream = await run(mainAgent, agentInputItems, { stream: true });
         
         // Monitor for tool usage and stream responses with proper event handling
-        await handleStreamWithToolTracking(stream, loader);
+        const agentResponse = await handleStreamWithToolTracking(stream, loader);
+        
+        // Add agent response to conversation history
+        if (agentResponse) {
+          conversationHistory.push({ role: 'assistant', content: agentResponse });
+        }
         
         // Handle any tool approvals
         await handleApprovals(stream);
