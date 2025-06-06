@@ -1,6 +1,6 @@
 # 🤖 Mega Agent - Intelligent CLI Assistant
 
-A powerful conversational AI assistant that combines streaming responses, human-in-the-loop approvals, and a comprehensive set of tools for various tasks including real-time weather data, web search, calculations, file operations, and system information.
+A powerful conversational AI assistant that combines streaming responses, human-in-the-loop approvals, and a comprehensive set of tools for various tasks including real-time weather data, web search, calculations, file operations, system information, AI image generation, e-commerce analytics, forecasting, and GitHub reporting.
 
 ## Features
 
@@ -8,7 +8,11 @@ A powerful conversational AI assistant that combines streaming responses, human-
 - **Human-in-the-Loop**: Approval system for sensitive operations
 - **Real-time Web Search**: AI-powered web search using OpenAI's web_search_preview tool
 - **Live Weather Data**: Current weather information using Visual Crossing API
-- **Modular Tools**: Easily extensible tool system with 6 built-in tools
+- **AI Image Generation**: Create images using OpenAI's DALL-E 3 model
+- **E-commerce Analytics**: Triple Whale Moby integration for business insights
+- **Time Series Forecasting**: Statistical forecasting with multiple algorithms
+- **GitHub Activity Reports**: Comprehensive weekly contribution reports
+- **Modular Tools**: Easily extensible tool system with 12 built-in tools
 - **Beautiful CLI**: Colorful and intuitive command-line interface using Chalk
 - **Conversational**: Natural back-and-forth conversations with context
 
@@ -27,6 +31,7 @@ npm install
 OPENAI_API_KEY=your_openai_api_key_here
 OPENAI_MODEL=gpt-4o-mini  # Optional, defaults to gpt-4o-mini
 VISUAL_CROSSING_API_KEY=your_visual_crossing_api_key_here
+GITHUB_TOKEN=your_github_token_here  # Optional, for GitHub weekly reports
 ```
 
 ## Usage
@@ -48,7 +53,9 @@ npm run mega-agent
 
 ## Available Tools
 
-The Mega Agent comes with 6 powerful built-in tools:
+The Mega Agent comes with powerful built-in tools:
+
+### Core Tools
 
 1. **🌤️ Weather Tool**: Get real-time weather data using coordinates
 2. **🔍 Search Tool**: AI-powered web search with current information
@@ -57,36 +64,18 @@ The Mega Agent comes with 6 powerful built-in tools:
 5. **⏰ Time Tool**: Get current time, date, and timezone information
 6. **💻 System Info Tool**: Retrieve system information (OS, memory, CPU, etc.)
 
-### Example Conversations
+### Advanced Tools
 
-```
-You: What's the weather at coordinates 37.7749, -122.4194?
-🤖 I'll check the weather at those coordinates for you.
-
-Weather for San Francisco, CA, United States:
-🌡️ Temperature: 18°C (feels like 16°C)
-🌤️ Condition: Partly Cloudy
-💧 Humidity: 65%
-💨 Wind Speed: 12 km/h
-☁️ Icon: partly-cloudy-day
-
-You: Search for the latest news about artificial intelligence
-🤖 I'll search for the latest AI news for you.
-
-🔍 Search Results for: "latest news about artificial intelligence"
-
-📝 **Answer:**
-Here are the latest developments in AI: [Current AI news and developments]
-
-You: Calculate the square root of 144
-🤖 I'll calculate that for you.
-
-sqrt(144) = 12
-```
+7. **🎨 Image Generation Tool**: Create images using OpenAI's DALL-E 3 model
+8. **🐋 Moby Tool**: E-commerce analytics via Triple Whale's AI platform
+9. **🗣️ Urban Dictionary Tool**: Look up slang definitions and meanings
+10. **📚 Wikipedia Tool**: Get article summaries and information
+11. **📈 Forecast Tool**: Time series forecasting with statistical analysis
+12. **📊 Weekly Report Tool**: GitHub activity and contribution reports
 
 ## Adding New Tools
 
-To add a new tool, edit `tools.ts`:
+To add a new tool, create a new file in `src/tools/` and add it to the exports:
 
 ```typescript
 export const myNewTool = tool({
@@ -105,7 +94,7 @@ export const myNewTool = tool({
   },
 });
 
-// Add to allTools array
+// Add to src/tools/index.ts
 export const allTools = [
   // ... existing tools
   myNewTool,
@@ -118,6 +107,11 @@ Some tools require approval before execution for security and safety:
 
 - **File Operations**: Write operations and sensitive file paths
 - **Search Tool**: Searches containing sensitive terms
+- **Image Generation**: All image generation requests (content filtering)
+- **Moby Tool**: Sensitive business queries and non-default shops
+- **Urban Dictionary**: All requests (explicit content)
+- **Forecast Tool**: Large datasets or long-term forecasts
+- **Weekly Report Tool**: All GitHub API access requests
 - **Custom Logic**: Any tool can implement custom approval logic
 
 When approval is required, you'll see:
@@ -135,12 +129,24 @@ Do you approve this tool usage? (y/n):
 ## Project Structure
 
 ```bash
-├── mega-agent.ts          # Main conversational agent
-├── tools.ts              # All tool definitions (6 tools)
-├── openai.ts             # OpenAI client configuration
-├── prompt.ts             # Prompt templates for tools
-├── streamed.ts           # Original streaming example
-├── human-in-the-loop-stream.ts  # Original HITL example
+├── src/
+│   ├── mega-agent.ts          # Main conversational agent
+│   ├── prompt.ts              # System prompt configuration
+│   └── tools/
+│       ├── index.ts           # All tool exports (12 tools)
+│       ├── weather.ts         # Weather tool
+│       ├── search.ts          # Web search tool
+│       ├── calculator.ts      # Mathematical calculations
+│       ├── fileOperations.ts  # File operations
+│       ├── getTime.ts         # Time and date
+│       ├── systemInfo.ts      # System information
+│       ├── generateImage.ts   # AI image generation
+│       ├── moby.ts           # Triple Whale e-commerce analytics
+│       ├── urbanDictionary.ts # Slang definitions
+│       ├── wikipedia.ts       # Wikipedia summaries
+│       ├── forecast.ts        # Time series forecasting
+│       └── weeklyReport.ts    # GitHub activity reports
+├── uploads/               # Generated images storage
 ├── package.json          # Dependencies and scripts
 └── README.md            # This file
 ```
@@ -155,15 +161,20 @@ Create a `.env` file with:
 OPENAI_API_KEY=your_openai_api_key_here
 OPENAI_MODEL=gpt-4o-mini  # Optional, defaults to gpt-4o-mini
 VISUAL_CROSSING_API_KEY=your_visual_crossing_api_key_here
+GITHUB_TOKEN=your_github_token_here  # Optional, for GitHub weekly reports
 ```
 
 ### API Keys Required
 
 1. **OpenAI API Key**: Get from [OpenAI Platform](https://platform.openai.com/api-keys)
-   - Used for: AI conversations and web search functionality
+   - Used for: AI conversations, web search, and image generation
 
 2. **Visual Crossing Weather API Key**: Get from [Visual Crossing](https://www.visualcrossing.com/weather-api)
    - Used for: Real-time weather data
+
+3. **GitHub Token** (Optional): Get from [GitHub Settings](https://github.com/settings/tokens)
+   - Used for: GitHub weekly activity reports
+   - Requires: `repo` scope for private repositories, or no scopes for public only
 
 ## License
 
@@ -173,7 +184,7 @@ MIT License
 
 1. Fork the repository
 2. Create a feature branch
-3. Add your tool to `tools.ts` and update the `allTools` array
+3. Add your tool to `src/tools/` directory and update the `allTools` array in `src/tools/index.ts`
 4. Test your changes
 5. Submit a pull request
 
