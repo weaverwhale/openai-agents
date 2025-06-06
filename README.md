@@ -36,12 +36,32 @@ GITHUB_TOKEN=your_github_token_here  # Optional, for GitHub weekly reports
 
 ## Usage
 
-### Start the Mega Agent
+### Development
 
 ```bash
 npm start
 # or
-npm run mega-agent
+npm run dev
+```
+
+### Build for Distribution
+
+Create a standalone executable that can be run without Node.js:
+
+```bash
+npm run build
+```
+
+This creates `./bin/openai-agents` - a standalone executable you can distribute.
+
+### Install Globally
+
+Install as a global CLI tool:
+
+```bash
+npm run install-global
+# Then run from anywhere:
+openai-agents
 ```
 
 ### Special Commands
@@ -150,6 +170,28 @@ Do you approve this tool usage? (y/n):
 ├── package.json          # Dependencies and scripts
 └── README.md            # This file
 ```
+
+## Distribution
+
+### Creating Executables
+
+The project is configured to create standalone executables using esbuild:
+
+```bash
+# Build executable for your platform
+npm run build
+
+# Install as global command
+npm run install-global
+```
+
+### Distribution Options
+
+1. **GitHub Releases**: Upload `./bin/openai-agents` to GitHub releases
+2. **NPM Package**: Publish to npm registry for global installation
+3. **Direct Download**: Host the executable file for direct download
+
+Users can run the executable directly without installing Node.js or dependencies.
 
 ## Development
 

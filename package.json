@@ -1,9 +1,14 @@
 {
   "name": "openai-agents",
+  "version": "1.0.0",
+  "bin": {
+    "openai-agents": "./dist/mega-agent.js"
+  },
   "scripts": {
-    "mega-agent": "tsx src/mega-agent.ts",
-    "ma": "tsx src/mega-agent.ts",
-    "start": "tsx src/mega-agent.ts"
+    "start": "tsx src/mega-agent.ts",
+    "dev": "tsx src/mega-agent.ts",
+    "build": "mkdir -p bin && npx esbuild src/mega-agent.ts --bundle --platform=node --target=node22 --outfile=bin/openai-agents.js && echo '#!/usr/bin/env node' | cat - bin/openai-agents.js > bin/openai-agents && chmod +x bin/openai-agents && rm bin/openai-agents.js",
+    "install-global": "npm install -g ."
   },
   "dependencies": {
     "@openai/agents": "^0.0.2",
@@ -13,6 +18,8 @@
     "zod": "^3.25.51"
   },
   "devDependencies": {
-    "tsx": "^4.19.4"
+    "@types/node": "^22.15.30",
+    "tsx": "^4.19.4",
+    "esbuild": "^0.20.0"
   }
 }
