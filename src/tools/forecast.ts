@@ -4,8 +4,8 @@ import { tool } from '@openai/agents';
 // Define the parameter types to match the zod schema
 type ForecastParams = {
   data: number[];
-  periods?: number;
-  interval?: 'days' | 'weeks' | 'months';
+  periods: number;
+  interval: 'days' | 'weeks' | 'months';
 };
 
 // Simple linear regression implementation

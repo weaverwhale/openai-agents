@@ -7,12 +7,9 @@ dotenv.config();
 // Define the parameter types to match the zod schema
 type WeeklyReportParams = {
   username: string;
-  offset?: number;
-  repos?: string[];
-  generateSummary?: boolean;
-  organization?: string;
-  startDate?: string;
-  endDate?: string;
+  offset: number;
+  generateSummary: boolean;
+  organization: string;
 };
 
 // Interfaces for GitHub API responses
@@ -316,11 +313,11 @@ async function generateSimplifiedWeeklyReport(
 export const createWeeklyReport = async (
   username: string,
   offset: number = 0,
-  repos?: string[],
+  repos?: string[] | null,
   generateSummary: boolean = false,
   organization: string = 'Triple-Whale',
-  startDate?: string,
-  endDate?: string,
+  startDate?: string | null,
+  endDate?: string | null,
 ): Promise<{ report: string } | { error: string }> => {
   if (!username) {
     return { error: 'Username is required' };
@@ -346,8 +343,8 @@ export const createWeeklyReport = async (
   try {
     const { startDate: calculatedStartDate, endDate: calculatedEndDate } = await getDateRange(
       offset,
-      startDate,
-      endDate,
+      startDate || undefined,
+      endDate || undefined,
     );
 
     const report = await generateSimplifiedWeeklyReport(
@@ -376,22 +373,16 @@ export const weeklyReportTool = tool({
     username: z.string().describe('GitHub username to generate report for'),
     offset: z
       .number()
-      .optional()
       .default(0)
       .describe('Offset the week range by this many weeks (default: 0 for last 7 days)'),
-    repos: z.array(z.string()).optional().describe('List of repositories to include in the report (for future enhancement)'),
     generateSummary: z
       .boolean()
-      .optional()
       .default(false)
       .describe('Whether to generate an AI summary using OpenAI (for future enhancement)'),
     organization: z
       .string()
-      .optional()
       .default('Triple-Whale')
       .describe('GitHub organization name (default: Triple-Whale)'),
-    startDate: z.string().optional().describe('Start date in YYYY-MM-DD format (overrides offset)'),
-    endDate: z.string().optional().describe('End date in YYYY-MM-DD format (overrides offset)'),
   }),
   needsApproval: async (_ctx, { username }) => {
     // Always require approval for GitHub API access due to sensitive nature
@@ -400,18 +391,16 @@ export const weeklyReportTool = tool({
   execute: async ({
     username,
     offset = 0,
-    repos,
     generateSummary = false,
     organization = 'Triple-Whale',
-    startDate,
-    endDate,
   }) => {
     try {
       if (!username || username.trim() === '') {
         throw new Error('Username cannot be empty');
       }
 
-      const result = await createWeeklyReport(username, offset, repos, generateSummary, organization, startDate, endDate);
+      // Set repos, startDate, endDate to undefined since they're not exposed as parameters
+      const result = await createWeeklyReport(username, offset, undefined, generateSummary, organization, undefined, undefined);
       
       // Check if there was an error
       if ('error' in result) {

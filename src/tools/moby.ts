@@ -16,12 +16,11 @@ function generateUUID(): string {
 // Define the parameter types to match the zod schema
 type MobyParams = {
   question: string;
-  shopId?: string;
-  parentMessageId?: string;
+  shopId: string;
 };
 
 // Moby query function
-export const queryMoby = async (question: string, shopId?: string, parentMessageId?: string): Promise<{ answer: string } | { error: string }> => {
+export const queryMoby = async (question: string, shopId: string, parentMessageId?: string | null): Promise<{ answer: string } | { error: string }> => {
   if (!question) {
     return { error: 'Question is required' };
   }
@@ -78,13 +77,8 @@ export const mobyTool = tool({
       .default('What is triple whale?'),
     shopId: z
       .string()
-      .optional()
-      .describe('Shopify store URL (defaults to madisonbraids.myshopify.com)')
+      .describe('Shopify store URL')  
       .default('madisonbraids.myshopify.com'),
-    parentMessageId: z
-      .string()
-      .optional()
-      .describe('Parent message ID for conversation context'),
   }),
   needsApproval: async (_ctx, { question, shopId }) => {
     // Add approval logic for sensitive business queries
@@ -94,16 +88,18 @@ export const mobyTool = tool({
     );
     
     // Also require approval for non-default shop IDs
-    const isNonDefaultShop = shopId && shopId !== 'madisonbraids.myshopify.com';
+    const isNonDefaultShop = shopId !== 'madisonbraids.myshopify.com';
     
     return Boolean(isSensitive || isNonDefaultShop);
   },
-  execute: async ({ question, shopId, parentMessageId }) => {
+  execute: async ({ question, shopId }) => {
     try {
       if (!question || question.trim() === '') {
         throw new Error('Question cannot be empty');
       }
 
+      // Always generate a new UUID for conversation context
+      const parentMessageId = generateUUID();
       const result = await queryMoby(question.trim(), shopId, parentMessageId);
       
       // Check if there was an error
@@ -113,7 +109,7 @@ export const mobyTool = tool({
       
       let response = `🐋 **Triple Whale Moby Analytics**\n\n`;
       response += `❓ **Question:** "${question}"\n`;
-      if (shopId && shopId !== 'madisonbraids.myshopify.com') {
+      if (shopId !== 'madisonbraids.myshopify.com') {
         response += `🏪 **Shop ID:** ${shopId}\n`;
       }
       response += `\n📊 **Moby's Response:**\n${result.answer}\n\n`;
