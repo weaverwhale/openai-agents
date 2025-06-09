@@ -1,33 +1,45 @@
 {
-  "name": "openai-agents",
+  "name": "openai-agents-fullstack",
   "version": "1.0.0",
-  "bin": {
-    "openai-agents": "./dist/mega-agent.js"
-  },
+  "description": "OpenAI Agents fullstack application with backend API and frontend interface",
   "scripts": {
-    "start": "tsx src/mega-agent.ts",
-    "dev": "tsx src/mega-agent.ts",
-    "api": "tsx src/api-server.ts",
-    "api:dev": "tsx --watch src/api-server.ts",
-    "build": "mkdir -p bin && npx esbuild src/mega-agent.ts --bundle --platform=node --target=node22 --outfile=bin/openai-agents.js && echo '#!/usr/bin/env node' | cat - bin/openai-agents.js > bin/openai-agents && chmod +x bin/openai-agents && rm bin/openai-agents.js",
-    "install-global": "npm install -g ."
+    "install-all": "npm install && npm install --prefix backend && npm install --prefix frontend",
+    "clean": "rm -rf node_modules backend/node_modules frontend/node_modules",
+    "backend:dev": "npm run api:dev --prefix backend",
+    "backend:start": "npm start --prefix backend",
+    "backend:build": "npm run build --prefix backend",
+    "frontend:dev": "npm run dev --prefix frontend",
+    "frontend:build": "npm run build --prefix frontend",
+    "frontend:preview": "npm run preview --prefix frontend",
+    "services:dev": "node scripts/run-services.js dev",
+    "services:prod": "node scripts/run-services.js prod",
+    "services:build": "node scripts/run-services.js build",
+    "fullstack:dev": "node scripts/run-services.js dev",
+    "fullstack:prod": "node scripts/run-services.js prod",
+    "fullstack:build": "node scripts/run-services.js build",
+    "dev": "node scripts/run-services.js dev",
+    "start": "node scripts/run-services.js prod",
+    "build": "node scripts/run-services.js build",
+    "install-global": "npm run backend:build && npm install -g ./backend"
   },
-  "dependencies": {
-    "@openai/agents": "^0.0.2",
-    "chalk": "^5.4.1",
-    "cors": "^2.8.5",
-    "dotenv": "^16.5.0",
-    "express": "^4.19.2",
-    "multer": "^1.4.5-lts.1",
-    "openai": "^5.1.1",
-    "zod": "^3.25.51"
-  },
+  "keywords": [
+    "openai",
+    "agents",
+    "fullstack",
+    "vue",
+    "express",
+    "typescript"
+  ],
+  "author": "Mike Weaver",
+  "license": "ISC",
   "devDependencies": {
-    "@types/cors": "^2.8.17",
-    "@types/express": "^4.17.21",
-    "@types/multer": "^1.4.12",
-    "@types/node": "^22.15.30",
-    "tsx": "^4.19.4",
-    "esbuild": "^0.20.0"
-  }
-}
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "workspaces": [
+    "backend",
+    "frontend"
+  ]
+} 
