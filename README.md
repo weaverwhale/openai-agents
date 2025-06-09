@@ -1,6 +1,6 @@
-# 🤖 Mega Agent - Intelligent CLI Assistant
+# 🤖 OpenAI Agents - Intelligent Assistant
 
-A powerful conversational AI assistant that combines streaming responses, human-in-the-loop approvals, and a comprehensive set of tools for various tasks including real-time weather data, web search, calculations, file operations, system information, AI image generation, e-commerce analytics, forecasting, and GitHub reporting.
+A powerful conversational AI assistant with both CLI and modern web interface. Features streaming responses, human-in-the-loop approvals, and a comprehensive set of tools for various tasks including real-time weather data, web search, calculations, file operations, system information, AI image generation, e-commerce analytics, forecasting, and GitHub reporting.
 
 ## Features
 
@@ -36,7 +36,24 @@ GITHUB_TOKEN=your_github_token_here  # Optional, for GitHub weekly reports
 
 ## Usage
 
-### Development
+### Web Interface (Vue + Vite)
+
+Run the modern web interface:
+
+```bash
+# Start the API server
+npm run api:dev
+
+# In another terminal, start the Vue frontend
+cd frontend
+npm run dev
+```
+
+Then open http://localhost:5173 for the web interface.
+
+### CLI Interface
+
+Run the command-line interface:
 
 ```bash
 npm start
@@ -209,9 +226,11 @@ GITHUB_TOKEN=your_github_token_here  # Optional, for GitHub weekly reports
 ### API Keys Required
 
 1. **OpenAI API Key**: Get from [OpenAI Platform](https://platform.openai.com/api-keys)
+
    - Used for: AI conversations, web search, and image generation
 
 2. **Visual Crossing Weather API Key**: Get from [Visual Crossing](https://www.visualcrossing.com/weather-api)
+
    - Used for: Real-time weather data
 
 3. **GitHub Token** (Optional): Get from [GitHub Settings](https://github.com/settings/tokens)
